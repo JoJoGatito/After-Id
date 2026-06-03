@@ -1,6 +1,8 @@
 // Main entry point
 // Dynamically loads all scripts in the correct dependency order
 
+window.__theIdBootstrapFailed = false;
+
 // Script loading utility
 function loadScript(src, isModule = false, integrity = null) {
     return new Promise((resolve, reject) => {
@@ -84,6 +86,7 @@ if (typeof window.updateCurrentPdfContext === 'function') {
         }
 
     } catch (error) {
+        window.__theIdBootstrapFailed = true;
         console.error('Failed to load application:', error);
         // Fallback: show error message
         document.body.innerHTML = `

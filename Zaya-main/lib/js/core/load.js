@@ -1,6 +1,29 @@
 // Initialize browser compatibility checks
 window.BrowserCompatibility.initializeCompatibilityChecks();
 
+if (!window.__theIdViewerDebugListenersAttached) {
+    window.__theIdViewerDebugListenersAttached = true;
+
+    window.addEventListener('error', (event) => {
+        console.error('[viewer-global-error]', {
+            message: event.message,
+            source: event.filename,
+            line: event.lineno,
+            column: event.colno,
+            stack: event.error && event.error.stack ? event.error.stack : null
+        });
+    });
+
+    window.addEventListener('unhandledrejection', (event) => {
+        const reason = event.reason;
+        console.error('[viewer-unhandled-rejection]', {
+            message: reason && reason.message ? reason.message : String(reason),
+            stack: reason && reason.stack ? reason.stack : null,
+            reason
+        });
+    });
+}
+
 // Constants - now centralized in app-state.js for single source of truth
 const DEFAULT_PDF_URL = window.appState.constructor.getDefaultPdfUrl();
 
@@ -82,8 +105,41 @@ async function isUrlReachable(url) {
     }
 }
 
+function canInitializeViewer() {
+    const container = document.getElementById('flipbookContainer');
+
+    if (window.__theIdBootstrapFailed) {
+        console.warn('[viewer-init] prevented because application bootstrap previously failed');
+        return false;
+    }
+
+    if (!container) {
+        console.warn('[viewer-init] prevented because #flipbookContainer is not available');
+        return false;
+    }
+
+    return true;
+}
+
 // Function to load the flipbook
 async function loadFlipbook(pdfUrl, rtlMode, page, pdfId) {
+    if (!canInitializeViewer()) {
+        isCurrentlyLoading = false;
+        return;
+    }
+
+    console.debug('[loadFlipbook] request received', {
+        pdfUrl,
+        pdfId,
+        page,
+        rtlMode,
+        defaultPdfUrl: DEFAULT_PDF_URL,
+        appStateCurrentPdf: window.appState ? window.appState.get('currentPdf') : null,
+        appStateCurrentPdfName: window.appState ? window.appState.get('currentPdfName') : null,
+        lastOpenedPDF: localStorage.getItem('lastOpenedPDF'),
+        lastOpenedPDFType: localStorage.getItem('lastOpenedPDFType')
+    });
+
     if (isCurrentlyLoading) {
         console.log('Already loading a PDF, skipping concurrent request');
         return;
@@ -99,6 +155,10 @@ async function loadFlipbook(pdfUrl, rtlMode, page, pdfId) {
 
     // Pre-flight check for remote URLs (skip for default PDF to avoid CORS issues)
     if (!pdfUrl.startsWith('blob:') && pdfUrl !== DEFAULT_PDF_URL) {
+        console.debug('[loadFlipbook] running reachability preflight', {
+            pdfUrl,
+            isDefaultPdf: pdfUrl === DEFAULT_PDF_URL
+        });
         const isReachable = await isUrlReachable(pdfUrl);
         if (!isReachable) {
             console.log('PDF URL unreachable, falling back to default...');
@@ -154,6 +214,13 @@ async function loadFlipbook(pdfUrl, rtlMode, page, pdfId) {
         const flipbookInstance = $("#flipbookContainer").flipBook(pdfUrl, options);
         window.flipbookInstance = flipbookInstance;
 
+        console.debug('[loadFlipbook] flipBook initialized', {
+            pdfUrl,
+            pdfId,
+            hasFlipbookInstance: Boolean(flipbookInstance),
+            appStateCurrentPdf: window.appState ? window.appState.get('currentPdf') : null
+        });
+
         if (flipbookInstance) {
             window.memoryManager.registerResource({
                 url: pdfUrl,
@@ -172,6 +239,12 @@ async function loadFlipbook(pdfUrl, rtlMode, page, pdfId) {
 
     // Add fallback logic for when flipbook fails to load after initialization
     setTimeout(() => {
+        console.debug('[loadFlipbook] watchdog checkpoint', {
+            requestedPdf: pdfUrl,
+            appStateCurrentPdf: window.appState ? window.appState.get('currentPdf') : null,
+            isCurrentlyLoading
+        });
+
         if (isCurrentlyLoading && pdfUrl === window.appState.get('currentPdf')) {
             // If it's still "loading" according to our lock after 5s, check if content actually appeared
             const hasDFlipContent = $("#flipbookContainer").find(".df-book-stage, .df-book-wrapper, canvas, .df-book-page").length > 0;
@@ -179,6 +252,14 @@ async function loadFlipbook(pdfUrl, rtlMode, page, pdfId) {
                              $("#flipbookContainer").text().includes("Cannot access file") ||
                              $("#flipbookContainer").text().includes("Not Found") ||
                              $("#flipbookContainer").text().includes("Error loading PDF");
+
+            console.debug('[loadFlipbook] watchdog inspection', {
+                requestedPdf: pdfUrl,
+                appStateCurrentPdf: window.appState ? window.appState.get('currentPdf') : null,
+                hasDFlipContent,
+                hasError,
+                flipbookTextPreview: $("#flipbookContainer").text().trim().slice(0, 200)
+            });
 
             if ((hasError || !hasDFlipContent) && pdfUrl !== DEFAULT_PDF_URL) {
                 console.log('Fallback triggered by watchdog');
@@ -476,6 +557,10 @@ function getThemeToastColors(theme) {
 
     // Initial call to load the flipbook
 $(document).ready(function () {
+    if (!canInitializeViewer()) {
+        return;
+    }
+
     var urlParams = new URLSearchParams(window.location.search);
     var pdfFromUrl = urlParams.get('pdf');
     var titleFromUrl = urlParams.get('title');
@@ -487,9 +572,29 @@ $(document).ready(function () {
     var pdfId;
     var pdfToLoad = window.appState.get('currentPdf') || DEFAULT_PDF_URL;
 
+    console.debug('[viewer-startup] initial state', {
+        href: window.location.href,
+        pdfFromUrl,
+        titleFromUrl,
+        pageFromUrl,
+        lastOpenedPDF,
+        lastOpenedPDFType,
+        appStateCurrentPdf: window.appState.get('currentPdf'),
+        appStateCurrentPdfType: window.appState.get('currentPdfType'),
+        defaultPdfUrl: DEFAULT_PDF_URL
+    });
+
     if (pdfFromUrl) {
         pdfToLoad = pdfFromUrl;
         pdfId = titleFromUrl || pdfFromUrl;
+
+        if (window.appState.get('currentPdf') !== pdfFromUrl) {
+            console.warn('[viewer-startup] query-parameter PDF differs from appState currentPdf before first load', {
+                pdfFromUrl,
+                appStateCurrentPdf: window.appState.get('currentPdf'),
+                note: 'This mismatch can explain reload or fallback behavior during startup.'
+            });
+        }
     } else if (lastOpenedPDF && lastOpenedPDF.trim() !== '') {
         if (lastOpenedPDFType === 'local' || lastOpenedPDF.startsWith('blob:')) {
             showThemedLocalFileToast(lastOpenedPDF);
@@ -510,6 +615,14 @@ $(document).ready(function () {
         pdfToLoad = DEFAULT_PDF_URL;
         pdfId = 'Default PDF';
     }
+
+    console.debug('[viewer-startup] resolved startup target', {
+        pdfToLoad,
+        pdfId,
+        pageFromUrl,
+        appStateCurrentPdf: window.appState.get('currentPdf'),
+        appStateCurrentPdfType: window.appState.get('currentPdfType')
+    });
 
     if (!isNaN(pageFromUrl)) {
         loadFlipbook(pdfToLoad, window.appState.get('isRTL'), pageFromUrl, pdfId);

@@ -1,5 +1,5 @@
-import { getAllQuotes, addOrUpdateQuote, deleteQuote, getQuotesByPdf, getQuoteById } from '/lib/js/features/quotes/db.js';
-import { displayQuotes, exportQuotes, displayQuotesInModal, exportPdfQuotes } from '/lib/js/features/quotes/ui.js';
+import { getAllQuotes, addOrUpdateQuote, deleteQuote, getQuotesByPdf, getQuoteById } from './db.js';
+import { displayQuotes, exportQuotes, displayQuotesInModal, exportPdfQuotes } from './ui.js';
 
 // Subscribe to AppState changes for quotes system
 window.appState.subscribe('currentPdf', (newValue) => {

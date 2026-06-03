@@ -86,6 +86,22 @@ function createCard(zine) {
   image.src = zine.thumbnail;
   image.alt = `${zine.title} cover`;
   image.loading = 'lazy';
+  image.addEventListener('error', () => {
+    let resolvedThumbnail = zine.thumbnail;
+
+    try {
+      resolvedThumbnail = new URL(zine.thumbnail, window.location.href).toString();
+    } catch (error) {
+      // Keep original value if resolution fails.
+    }
+
+    console.error('[zine-card] thumbnail failed to load', {
+      title: zine.title,
+      thumbnail: zine.thumbnail,
+      resolvedThumbnail,
+      pageHref: window.location.href
+    });
+  });
   article.appendChild(image);
 
   const body = document.createElement('div');
@@ -133,6 +149,13 @@ function createCard(zine) {
   action.className = 'card__action';
   action.href = buildViewerHref(zine);
   action.textContent = 'Open zine';
+  action.addEventListener('click', () => {
+    console.debug('[zine-card] opening viewer', {
+      title: zine.title,
+      pdfPath: zine.pdfPath,
+      resolvedViewerHref: action.href
+    });
+  });
 
   footer.append(date, action);
   body.append(header, description);
