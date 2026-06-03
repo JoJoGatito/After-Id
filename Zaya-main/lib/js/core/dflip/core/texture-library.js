@@ -341,12 +341,16 @@ export class TextureLibrary {
     self.thumblist.lastScrolled = Date.now();
     self.thumblist.review = scheduleReview;
     
-    // Start background preloading of all thumbnails
+    // Background thumbnail preloading is opt-in because aggressively rendering
+    // every thumb right after startup adds noticeable main-thread work.
     const preloadAllThumbs = () => {
       let currentIdx = 1;
+      const maxThumbsToPreload = Number.isFinite(self.options.maxThumbsToPreload)
+        ? Math.min(self.options.maxThumbsToPreload, self.pageCount)
+        : self.pageCount;
       const loadNext = () => {
         if (!self || !self.thumblist) return;
-        if (currentIdx <= self.pageCount) {
+        if (currentIdx <= maxThumbsToPreload) {
           const cached = self.getCache(currentIdx, true);
           if (!cached) {
             self.getPage(currentIdx, () => {
@@ -361,7 +365,17 @@ export class TextureLibrary {
       };
       setTimeout(loadNext, 1000); // Wait a bit after init
     };
-    preloadAllThumbs();
+    if (self.options.preloadAllThumbs === true) {
+      const scheduleThumbPreload = window.requestIdleCallback
+        ? (callback) => window.requestIdleCallback(callback, { timeout: 2000 })
+        : (callback) => setTimeout(callback, 2000);
+
+      scheduleThumbPreload(() => {
+        if (self && self.thumblist) {
+          preloadAllThumbs();
+        }
+      });
+    }
     
     scheduleReview();
 

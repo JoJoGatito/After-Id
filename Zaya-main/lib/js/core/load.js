@@ -94,8 +94,18 @@ async function isUrlReachable(url) {
     if (url.startsWith('blob:')) return true; // Blob URLs are local and expected to be valid during session
 
     try {
+        const resolvedUrl = new URL(url, window.location.href);
+        if (resolvedUrl.origin === window.location.origin) {
+            return true;
+        }
+    } catch (error) {
+        console.warn('Unable to resolve URL during pre-flight check:', url, error);
+        return false;
+    }
+
+    try {
         // Use HEAD request to minimize data usage
-        const response = await fetch(url, { method: 'HEAD', mode: 'no-cors' });
+        await fetch(url, { method: 'HEAD', mode: 'no-cors' });
         // With no-cors, we can't see the status, but if fetch doesn't throw, it's a good sign.
         // However, DFlip needs CORS for many PDFs. Let's try a regular fetch for metadata.
         return true;
@@ -185,6 +195,7 @@ async function loadFlipbook(pdfUrl, rtlMode, page, pdfId) {
         duration: 700,
         backgroundColor: "#2F2D2F",
         direction: rtlMode ? 2 : 1, // Use 2 for RTL and 1 for LTR
+        preloadAllThumbs: false,
         zoomChange: function (isZoomed) {
             $("body").css("overflow", isZoomed ? "hidden" : "auto");
         },

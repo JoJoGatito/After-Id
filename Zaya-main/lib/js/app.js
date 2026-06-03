@@ -48,7 +48,9 @@ async function loadApplication() {
         // 2. Core libraries
         await loadScript('lib/js/libs/three.min.js');
         await loadScript('lib/js/libs/pdf.min.js');
-        await loadScript('lib/js/libs/pdf.worker.min.js');
+        // Do not load the worker file as a regular script.
+        // pdf.js will fetch it through Worker() using the configured workerSrc.
+        // Loading it on the main thread forces the slower fake-worker path.
         await loadScript('lib/js/libs/mockup.min.js');
 
         // 3. Utilities (set up global objects)
