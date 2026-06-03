@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The ID</title>
+  <meta
+    name="description"
+    content="Browse The ID library and open each issue in the integrated flipbook viewer."
+  >
+  <link rel="icon" type="image/svg+xml" href="./Zaya-main/assets/zaya.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/site.css">
+</head>
+<body>
+  <div class="site-shell">
+    <header class="hero">
+      <div class="hero__eyebrow">Public zine library</div>
+      <div class="hero__content">
+        <div>
+          <h1>The ID</h1>
+          <p class="hero__lede">
+            A lightweight public browsing experience backed by normalized zine metadata and the integrated The ID viewer.
+          </p>
+        </div>
+        <img
+          class="hero__mark"
+          src="./Zaya-main/assets/zaya.svg"
+          alt="The ID mark"
+          width="72"
+          height="72"
+        >
+      </div>
+      <div class="hero__meta">
+        <span class="meta-pill"><strong id="zine-count">0</strong> published zines</span>
+        <span class="meta-pill">Homepage → viewer query-parameter flow</span>
+        <span class="meta-pill">Static metadata source</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="section-heading">
+        <div>
+          <p class="section-heading__label">Directory</p>
+          <h2>Browse the current issues</h2>
+        </div>
+        <p class="section-heading__copy">
+          Each card opens the selected zine in the integrated viewer using a deployment-safe query parameter.
+        </p>
+      </section>
+
+      <div id="loading-state" class="state-card">Loading zines…</div>
+      <div id="error-state" class="state-card state-card--error" hidden></div>
+      <div id="empty-state" class="state-card" hidden>
+        No published zines are available yet.
+      </div>
+      <section id="zine-grid" class="zine-grid" aria-live="polite"></section>
+    </main>
+  </div>
+
+  <script type="module" src="./assets/site.js"></script>
+</body>
+</html>
