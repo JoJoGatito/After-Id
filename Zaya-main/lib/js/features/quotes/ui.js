@@ -1,4 +1,4 @@
-import { getAllQuotes } from '/lib/js/features/quotes/db.js';
+import { getAllQuotes } from './db.js';
 
 export function displayQuotes(quotes) {
   const quoteList = $("#quoteList");

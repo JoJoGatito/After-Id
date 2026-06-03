@@ -7,16 +7,7 @@
 function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-            const serviceWorkerPath = '/sw.js';
-            const resolvedServiceWorkerUrl = new URL(serviceWorkerPath, window.location.href).href;
-
-            console.debug('[SW] Registering service worker', {
-                requestedPath: serviceWorkerPath,
-                resolvedUrl: resolvedServiceWorkerUrl,
-                pageUrl: window.location.href,
-                pathname: window.location.pathname
-            });
-
+            const serviceWorkerPath = new URL('../../sw.js', import.meta.url).pathname;
             navigator.serviceWorker.register(serviceWorkerPath)
                 .then(function(registration) {
                     console.log('[SW] Service Worker registered successfully:', registration.scope);
@@ -42,12 +33,6 @@ function registerServiceWorker() {
                     });
                 })
                 .catch(function(error) {
-                    console.error('[SW] Service Worker registration context:', {
-                        requestedPath: serviceWorkerPath,
-                        resolvedUrl: resolvedServiceWorkerUrl,
-                        pageUrl: window.location.href,
-                        pathname: window.location.pathname
-                    });
                     console.error('[SW] Service Worker registration failed:', error);
                 });
         });

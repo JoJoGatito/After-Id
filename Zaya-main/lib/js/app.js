@@ -10,13 +10,6 @@ function loadScript(src, isModule = false, integrity = null) {
         // Add cache-busting parameter
         const separator = src.includes('?') ? '&' : '?';
         script.src = `${src}${separator}t=${Date.now()}`;
-        console.debug('[bootstrap] loadScript request', {
-            requestedSrc: src,
-            resolvedSrc: script.src,
-            isModule,
-            baseURI: document.baseURI,
-            pathname: window.location.pathname
-        });
         script.async = false; // Load synchronously to maintain order
 
         if (isModule) {
@@ -28,24 +21,8 @@ function loadScript(src, isModule = false, integrity = null) {
             script.crossOrigin = 'anonymous';
         }
 
-        script.onload = () => {
-            console.debug('[bootstrap] loadScript loaded', {
-                requestedSrc: src,
-                resolvedSrc: script.src,
-                isModule
-            });
-            resolve(src);
-        };
-        script.onerror = () => {
-            console.error('[bootstrap] loadScript failed', {
-                requestedSrc: src,
-                resolvedSrc: script.src,
-                isModule,
-                baseURI: document.baseURI,
-                pathname: window.location.pathname
-            });
-            reject(new Error(`Failed to load script: ${src}`));
-        };
+        script.onload = () => resolve(src);
+        script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
 
         document.head.appendChild(script);
     });
