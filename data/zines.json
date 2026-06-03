@@ -5,12 +5,17 @@
     "slug": "the-id-launch-sample",
     "description": "A placeholder launch issue used to validate the first public browsing flow, homepage card rendering, and viewer integration.",
     "date": "2026-06-03",
-    "thumbnail": "assets/uploads/thumbnails/the-id-launch-sample.svg",
-    "pdfPath": "assets/uploads/pdfs/the-id-launch-sample.pdf",
+    "thumbnail": "/assets/uploads/thumbnails/the-id-launch-sample.svg",
+    "pdf": "/assets/uploads/pdfs/the-id-launch-sample.pdf",
+    "pdfPath": "/assets/uploads/pdfs/the-id-launch-sample.pdf",
     "featured": true,
     "draft": false,
     "category": "Launch Sample",
-    "tags": ["sample", "viewer", "public-site"],
+    "tags": [
+      "sample",
+      "viewer",
+      "public-site"
+    ],
     "author": "The ID"
   }
 ]

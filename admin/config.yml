@@ -1,0 +1,39 @@
+backend:
+  name: git-gateway
+  branch: main
+
+site_url: https://after-id.netlify.app/
+display_url: https://after-id.netlify.app/
+
+media_folder: assets/uploads
+public_folder: /assets/uploads
+
+collections:
+  - name: zines
+    label: Zines
+    label_singular: Zine
+    folder: content/zines
+    create: true
+    delete: true
+    extension: md
+    format: frontmatter
+    slug: "{{slug}}"
+    identifier_field: title
+    summary: "{{title}} — {{date}}"
+    fields:
+      - { label: Title, name: title, widget: string }
+      - { label: Slug, name: slug, widget: string, hint: "Used in filenames and viewer URLs, for example: issue-001" }
+      - { label: Description, name: description, widget: text }
+      - { label: Publication Date, name: date, widget: datetime, date_format: YYYY-MM-DD, time_format: false }
+      - { label: Thumbnail, name: thumbnail, widget: image, media_folder: assets/uploads/thumbnails, public_folder: /assets/uploads/thumbnails }
+      - { label: PDF File, name: pdf, widget: file, media_folder: assets/uploads/pdfs, public_folder: /assets/uploads/pdfs }
+      - { label: Author, name: author, widget: string, required: false }
+      - { label: Category, name: category, widget: string, required: false }
+      - label: Tags
+        name: tags
+        widget: list
+        required: false
+        summary: "{{fields.tag}}"
+        field: { label: Tag, name: tag, widget: string }
+      - { label: Featured, name: featured, widget: boolean, required: false, default: false }
+      - { label: Draft, name: draft, widget: boolean, required: false, default: false }

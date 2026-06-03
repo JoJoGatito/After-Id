@@ -7,13 +7,23 @@ const emptyState = document.getElementById('empty-state');
 const zineGrid = document.getElementById('zine-grid');
 const zineCount = document.getElementById('zine-count');
 
+function slugify(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 function normalizeZine(entry) {
   const pdfPath = typeof entry.pdfPath === 'string' ? entry.pdfPath : entry.pdf;
+  const slug = String(entry.slug || '').trim();
+  const title = String(entry.title || '').trim();
 
   return {
-    id: String(entry.id || '').trim(),
-    title: String(entry.title || '').trim(),
-    slug: String(entry.slug || '').trim(),
+    id: String(entry.id || slug || slugify(title)).trim(),
+    title,
+    slug,
     description: String(entry.description || '').trim(),
     date: String(entry.date || '').trim(),
     thumbnail: String(entry.thumbnail || '').trim(),
