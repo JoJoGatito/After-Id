@@ -1,5 +1,24 @@
 [
   {
+    "id": "issue-test",
+    "title": "Tester",
+    "slug": "issue-test",
+    "description": "|-",
+    "date": "2026-06-03",
+    "thumbnail": "/assets/uploads/thumbnails/chicken2.jpg",
+    "pdf": "/assets/uploads/pdfs/advocacy-and-justice-with-communities-of-color.pdf",
+    "pdfPath": "/assets/uploads/pdfs/advocacy-and-justice-with-communities-of-color.pdf",
+    "featured": true,
+    "draft": false,
+    "category": "Gaaay",
+    "tags": [
+      "test",
+      "gay",
+      "stuff"
+    ],
+    "author": "Testy McTesto"
+  },
+  {
     "id": "the-id-launch-sample",
     "title": "The ID Launch Sample",
     "slug": "the-id-launch-sample",

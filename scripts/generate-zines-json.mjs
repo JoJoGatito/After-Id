@@ -7,6 +7,19 @@ const rootDirectory = path.resolve(scriptDirectory, '..');
 const contentDirectory = path.join(rootDirectory, 'content', 'zines');
 const outputFile = path.join(rootDirectory, 'data', 'zines.json');
 
+async function pathExists(targetPath) {
+  try {
+    await fs.access(targetPath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function toWorkspaceRelative(targetPath) {
+  return path.relative(rootDirectory, targetPath) || '.';
+}
+
 function slugify(value) {
   return String(value || '')
     .trim()
@@ -128,6 +141,43 @@ function normalizeEntry(entry, fallbackSlug) {
   };
 }
 
+async function logAssetDiagnostics(entry, entryFile) {
+  const assetChecks = [
+    { field: 'pdf', value: entry.pdf },
+    { field: 'thumbnail', value: entry.thumbnail },
+  ];
+
+  for (const asset of assetChecks) {
+    const normalizedValue = String(asset.value || '').trim();
+
+    if (!normalizedValue || /^(https?:|blob:)/i.test(normalizedValue)) {
+      continue;
+    }
+
+    const publicAssetPath = path.join(rootDirectory, normalizedValue.replace(/^\//, ''));
+    const nestedContentAssetPath = path.join(rootDirectory, 'content', 'zines', normalizedValue.replace(/^\//, ''));
+
+    const [publicExists, nestedContentExists] = await Promise.all([
+      pathExists(publicAssetPath),
+      pathExists(nestedContentAssetPath),
+    ]);
+
+    if (!publicExists) {
+      console.warn('[zines-json] Referenced asset is missing from the public site root.', {
+        title: entry.title || entry.slug || path.basename(entryFile),
+        field: asset.field,
+        configuredValue: normalizedValue,
+        expectedPublicPath: toWorkspaceRelative(publicAssetPath),
+        contentEntry: toWorkspaceRelative(entryFile),
+        misplacedContentAssetPath: nestedContentExists ? toWorkspaceRelative(nestedContentAssetPath) : null,
+        probableCause: nestedContentExists
+          ? 'Asset exists under content/zines instead of the repository root assets directory.'
+          : 'No matching asset was found at the expected public path.'
+      });
+    }
+  }
+}
+
 async function readEntryFiles() {
   try {
     const directoryEntries = await fs.readdir(contentDirectory, { withFileTypes: true });
@@ -152,7 +202,10 @@ async function generateZinesJson() {
     const fileContents = await fs.readFile(entryFile, 'utf8');
     const frontmatter = parseFrontmatter(fileContents);
     const fallbackSlug = path.basename(entryFile, path.extname(entryFile));
-    zines.push(normalizeEntry(frontmatter, fallbackSlug));
+    const normalizedEntry = normalizeEntry(frontmatter, fallbackSlug);
+
+    await logAssetDiagnostics(normalizedEntry, entryFile);
+    zines.push(normalizedEntry);
   }
 
   zines.sort((left, right) => right.date.localeCompare(left.date) || left.title.localeCompare(right.title));

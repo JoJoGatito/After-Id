@@ -12,6 +12,16 @@ function loadScript(src, isModule = false, integrity = null) {
         script.src = `${src}${separator}t=${Date.now()}`;
         script.async = false; // Load synchronously to maintain order
 
+        if (src.includes('sw-manager.js')) {
+            console.debug('[bootstrap] loading service worker manager', {
+                src,
+                isModule,
+                note: isModule
+                    ? 'Service worker manager is loading as an ES module.'
+                    : 'Service worker manager is loading as a classic script. Any use of import.meta inside that file will throw a syntax error.'
+            });
+        }
+
         if (isModule) {
             script.type = 'module';
         }
@@ -47,7 +57,7 @@ async function loadApplication() {
         await loadScript('lib/js/utils/browser-compatibility.js');
         await loadScript('lib/js/utils/mobile-support.js');
         await loadScript('lib/js/utils/memory-manager.js');
-        await loadScript('lib/js/utils/sw-manager.js');
+        await loadScript('lib/js/utils/sw-manager.js', true);
 
         // 4. Application state & data
         await loadScript('lib/js/utils/app-state.js');

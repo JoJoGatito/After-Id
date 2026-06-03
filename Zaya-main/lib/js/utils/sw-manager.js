@@ -7,7 +7,7 @@
 function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-            const serviceWorkerPath = new URL('../../sw.js', import.meta.url).pathname;
+            const serviceWorkerPath = new URL('../../../sw.js', import.meta.url).pathname;
             navigator.serviceWorker.register(serviceWorkerPath)
                 .then(function(registration) {
                     console.log('[SW] Service Worker registered successfully:', registration.scope);
